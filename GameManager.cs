@@ -10,9 +10,9 @@ public class GameManager : MonoBehaviour
     // variable to hold the current game speed
     public float gameSpeed;
     // variable to hold starting amount of lives
-    public float livesRemaining;
+    public float livesRemaining = 3f;
 
-
+    public TextMeshProUGUI livesRemainingText;
     public TextMeshProUGUI currentScoreText;
     public TextMeshProUGUI highScoreText;
     private float currentScore;
@@ -34,11 +34,22 @@ public class GameManager : MonoBehaviour
     }
 
     // ensures initital speed is stored as game speed when called
-    private void NewGame()
+    public void NewGame()
     {
         currentScore = 0f;
         livesRemaining = 3f;
         gameSpeed = initialGameSpeed;
+        livesRemainingText.text = livesRemaining.ToString();
+    }
+
+    public void GameOver()
+    {
+
+    }
+
+    public void DecreaseLives(float livesRemaining)
+    {
+        livesRemainingText.text = livesRemaining.ToString();
     }
 
     private float CalculateGameSpeed(float currentScore)
