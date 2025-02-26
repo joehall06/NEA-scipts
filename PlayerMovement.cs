@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour
@@ -8,19 +9,24 @@ public class PlayerMovement : MonoBehaviour
     // reference to the script 'GameManager' allowing public variable to be used
     public GameManager gameManager;
 
-    // creates a variable which can be controlled to the player lives remaining
-    private float livesRemaining = 3f;
+    public PowerUps powerUps;
 
     // creates a fixed jumping force
-    private float jumpForce = 20f;
+    public float jumpForce = 40f;
 
     // boolean determining if player is touching the ground game object
     private bool playerGrounded = false;
     // boolean determining if player can jump or not
-    private bool allowJump = true;
+    public bool allowJump = true;
 
     // creates a new 2D vector
-    private Vector2 originalScale;
+    public Vector2 originalScale;
+
+    
+    // used for flashing sprites flashing effect
+    public GameObject player;
+    private SpriteRenderer spriteRenderer;
+    private bool spriteFlashing = false;
 
     // Start is called before the first frame update
     void Start()
@@ -31,6 +37,14 @@ public class PlayerMovement : MonoBehaviour
         // searches the scene for a GameObject that has the GameManager script attached
         // allows it to be always accessed
         gameManager = FindObjectOfType<GameManager>();
+
+        // searches the scene for a GameObject that has the PowerUps script attached
+        // allows it to be always accessed
+        //powerUps = FindObjectOfType<PowerUps>();
+
+        // allows the sprite to be controlled
+        // used for the sprite flashing effect
+        spriteRenderer = player.GetComponent<SpriteRenderer>();
 
         // sets the variable orginalScale to the game objects scale
         originalScale = transform.localScale;
@@ -82,40 +96,143 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
-    // checks if a player's collider has triggered with another collider
+
+    // boolean holding value if sprite is colliding
+    private bool isColliding = false;
+
     private void OnTriggerEnter2D(Collider2D collision)
     {
         // checks if the other game object's tag is 'Ground'
-        if (collision.gameObject.CompareTag("Ground"))
+        if (collision.gameObject.CompareTag("Ground") || (collision.gameObject.CompareTag("Floor")))
         {
             playerGrounded = true;
         }
-    }
 
-    // checks if a player's collider has untriggered
-    private void OnTriggerExit2D(Collider2D collision)
-    {
-        playerGrounded = false;
-    }
-
-    // checks if a player's collider has collided with another collider
-    private void OnCollisionEnter2D(Collision2D collision)
-    {
-        // checks if the collider has the tag 'Obstacle'
+        // checks if the other game object's tag is an obstacle
         if (collision.gameObject.CompareTag("Obstacle"))
         {
-            // decreases the lives remaining
-            livesRemaining -= 1;
-            gameManager.DecreaseLives(livesRemaining);
+            // if true, the function will not occur
+            if (isColliding) return;
+            isColliding = true;
 
-            // checks if the player has no lives remaining
-            if (livesRemaining <= 0)
+            // causes collided obstacle to disappear
+            collision.gameObject.SetActive(false);
+
+            if (powerUps.decreaseLives)
             {
-                gameManager.GameOver();
+                // calls function in 'Game Manager' script
+                gameManager.DecreaseLives();
+            }
+
+            // causes sprite to flash
+            ControlSpriteFlash();
+        }
+
+        // checks if the other game object's tag is a floor
+        if (collision.gameObject.name == "LeftEdge")
+        {
+            if (powerUps.decreaseLives)
+            {
+                // calls function in 'Game Manager' script
+                gameManager.DecreaseLives();
+            }
+
+            // adds a position vector to each obstacle present
+            // makes illusion as if sprite has moved back
+            GameObject[] obstaclesCollections = GameObject.FindGameObjectsWithTag("Obstacle Collection");
+            foreach (GameObject collection in obstaclesCollections)
+            {
+                collection.transform.position += new Vector3(8, 0, 0);
+            }
+
+            // causes sprite to flash
+            ControlSpriteFlash();
+        }
+
+        // checks if the other game object's tag is a power up
+        if (collision.gameObject.CompareTag("Power Up"))
+        {
+            // if true, the function will not occur
+            if (isColliding) return;
+            isColliding = true;
+
+            // causes collided power up to disappear
+            collision.gameObject.SetActive(false);
+
+            // depending on the power up
+            // specific function is called
+            switch (collision.gameObject.name)
+            {
+                case "PU 1(Clone)":
+                    powerUps.PowerUpOne();
+                    break;
+
+                case "PU 2(Clone)":
+                    powerUps.PowerUpTwo();
+                    break;
+
+                case "PU 3(Clone)":
+                    powerUps.PowerUpThree();
+                    break;
+
+                case "PU 4(Clone)":
+                    powerUps.PowerUpFour();
+                    break;
             }
         }
+
+        // schedules the function be called 0.1s later
+        Invoke("ResetCollisionFlag", 0.1f);
+    }
+
+    private void OnTriggerExit2D(Collider2D collision)
+    {
+        // only reset grounded if exiting ground or floor colliders
+        if (collision.gameObject.CompareTag("Ground") || collision.gameObject.CompareTag("Floor"))
+        {
+            playerGrounded = false;
+        }
+    }
+
+    // allows object to collide again
+    private void ResetCollisionFlag()
+    {
+        isColliding = false;
+    }
+
+    // controls the flash of the sprite
+    private void ControlSpriteFlash()
+    {
+        if (!spriteFlashing)
+        {
+            spriteFlashing = true;
+            // repeatedly calls every 0.1s
+            InvokeRepeating("SpriteFlashStart", 0f, 0.1f);
+            // schedules the function be called 1s later
+            Invoke("SpriteFlashStop", 1f);
+        }
+    }
+
+    private void SpriteFlashStart()
+    {
+        // disables / enabled the sprite renderer of the sprite
+        // creates flashing illusion
+        spriteRenderer.enabled = !spriteRenderer.enabled;
+    }
+
+    private void SpriteFlashStop()
+    {
+        // stops a function from being called
+        CancelInvoke("SpriteFlashStart");
+        
+        // reset variables
+        spriteRenderer.enabled = true;
+        spriteFlashing = false;
     }
 }
+
+
+
 
 
 

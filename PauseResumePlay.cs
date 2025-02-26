@@ -1,5 +1,7 @@
 using UnityEngine;
 using TMPro;
+using System;
+using UnityEngine.AI;
 
 public class PauseResumePlay : MonoBehaviour
 {
@@ -108,4 +110,51 @@ public class PauseResumePlay : MonoBehaviour
         resumeTimerActive = false;
         resumePlayTimerActive = false;
     }
+
+    // creating arrays which store game objects
+    // can be used over multiple scripts
+    public GameObject[] obstacles;
+    public GameObject[] obstaclesCollections;
+    public GameObject[] powerUps;
+
+    public void DisableGameObjects()
+    {
+        // stores the different types of specific obstacles in their respective array
+        obstacles = GameObject.FindGameObjectsWithTag("Obstacle");
+        obstaclesCollections = GameObject.FindGameObjectsWithTag("Obstacle Collection");
+        powerUps = GameObject.FindGameObjectsWithTag("Power Up");
+
+        // loops through the array and sets all objects on the canvas inactive (stops displaying them)
+        foreach (GameObject obstacle in obstacles)
+        {
+            obstacle.SetActive(false);
+        }
+        foreach (GameObject collection in obstaclesCollections)
+        {
+            collection.SetActive(false);
+        }
+        foreach (GameObject powerUp in powerUps)
+        {
+            powerUp.SetActive(false);
+        }
+    }
+
+    public void EnableGameObjects()
+    {
+        // loops through the array and sets all objects on the canvas active (displays them)
+        foreach (GameObject obstacle in obstacles)
+        {
+            obstacle.SetActive(true);
+        }
+        foreach (GameObject collection in obstaclesCollections)
+        {
+            collection.SetActive(true);
+        }
+        foreach (GameObject powerUp in powerUps)
+        {
+            powerUp.SetActive(true);
+        }
+    }
 }
+
+

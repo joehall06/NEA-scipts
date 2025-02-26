@@ -6,132 +6,223 @@ public class Spawner : MonoBehaviour
     // created within Unity
     public GameObject[] objectPrefabs;
 
-    // array to hold the individual spawn probalities for each project
-    // each index matches with the corresponding index in the 'objectPrefabs' array
-    private float[] spawnChance;
-
-    // float holding the minimum time limit before each object spawning
-    private float spawnCountdown = 1f;
+    // float holding the minimum time limit before each spawn
+    private float spawnObstacleCountdown;
+    private float spawnPUCountdown;
 
     // boolean allowing the spawning feature to be stopped / resumed
     private bool enableSpawning = true;
 
     // float holding the y-axis offset value when called
     private float objectOffsetY;
+    // float holding the x-axis offset value when called
+    private float objectOffsetX;
 
 
     // Start is called before the first frame update
     void Start()
     {
-        // inilitiaze the array to match the size of 'objectPrefabs' array
-        spawnChance = new float[objectPrefabs.Length];
-
-        // assigning the spawn chances which can be adjusted
-        // uses probality (in %)
-        // ensure that the probalities add up to 1
-        spawnChance[0] = 0.15f;
-        spawnChance[1] = 0.15f;
-        spawnChance[2] = 0.15f;
-        spawnChance[3] = 0.15f;
-        spawnChance[4] = 0.15f;
-        spawnChance[5] = 0.15f;
+        spawnObstacleCountdown = 2f;
+        spawnPUCountdown = 15f;
     }
 
+    // Update is called once per frame
     void Update()
     {
-        // continually checks to see if objects can be spawned
-        SpawnCheck();
+        SpawnObstacleCheck();
+        SpawnPUCheck();
     }
 
     // checks if obstacles can be spawned
-    private void SpawnCheck()
+    private void SpawnObstacleCheck()
     {
-        if (spawnCountdown > 0)
+        if (spawnObstacleCountdown > 0)
         {
             // ensures a minimum timeframe of 1 second is between each obstacle spawning
-            spawnCountdown -= Time.unscaledDeltaTime;
+            spawnObstacleCountdown -= Time.deltaTime;
         }
         else
         {
 
             // spawns after the time remaining is 0 seconds
-            SpawnObjects();
+            ChooseObsacle();
 
             // reset the spawn countdown for the next obstacle spawning
             // adds a random number in the range of [0,1] to the countdown timing
             // makes predicting when the next obstacle will spawn harder
-            spawnCountdown = 1 + Random.value;  
+            spawnObstacleCountdown = UnityEngine.Random.Range(6, 8);
         }
     }
 
-    // calculates the y-axis offset values for each object
-    private float ObjectOffsetY(int prefabIndex)
+    // stores offset for x and y values for each unique object
+    // when spawned ensure that they are all at a similar level
+    private (float objectOffsetY, float objectOffsetX) ObjectOffset(int prefabIndex)
     {
-        if (prefabIndex == 0)
+        switch (prefabIndex)
         {
-            objectOffsetY = 0.29f;
-        }
-        else if (prefabIndex == 1) {
-            objectOffsetY = -0.02f;
-        }
-        else if (prefabIndex == 2)
-        {
-            objectOffsetY = 0.065f;
-        }
-        else if (prefabIndex == 3)
-        {
-            objectOffsetY = 1f;
-        }
-        else if (prefabIndex == 4)
-        {
-            objectOffsetY = 0.8f;
-        }
-        else if (prefabIndex == 5)
-        {
-            objectOffsetY = 0.8f;
+            case 0:
+                objectOffsetY = 1.7f;
+                objectOffsetX = 21f;
+                break;
+            case 1:
+                objectOffsetY = 2.29f;
+                objectOffsetX = 21f;
+                break;
+            case 2:
+                objectOffsetY = 0f;
+                objectOffsetX = 21f;
+                break;
+            case 3:
+                objectOffsetY = 0.05f;
+                objectOffsetX = 21f;
+                break;
+            case 4:
+                objectOffsetY = 1.75f;
+                objectOffsetX = 18f;
+                break;
+            case 5:
+                objectOffsetY = 2.7f;
+                objectOffsetX = 18f;
+                break;
+            case 6:
+                objectOffsetY = 3.5f;
+                objectOffsetX = 21f;
+                break;
+            case 7:
+                objectOffsetY = 2.95f;
+                objectOffsetX = 25f;
+                break;
+            case 8:
+                objectOffsetY = 1.65f;
+                objectOffsetX = 21f;
+                break;
+            case 9:
+                objectOffsetY = 4.66f;
+                objectOffsetX = 21f;
+                break;
+            case 10:
+                objectOffsetY = 2.2f;
+                objectOffsetX = 21f;
+                break;
+            case 11:
+                objectOffsetY = 2.8f;
+                objectOffsetX = 21f;
+                break;
+            case 12:
+                objectOffsetY = 2.5f;
+                objectOffsetX = 26f;
+                break;
+            case 13:
+                objectOffsetY = 2.74f;
+                objectOffsetX = 22f;
+                break;
+            case 14:
+                objectOffsetY = -0.62f;
+                objectOffsetX = 29f;
+                break;
+            case 15:
+                objectOffsetY = 1.97f;
+                objectOffsetX = 23f;
+                break;
+            case 16:
+                objectOffsetY = 2.17f;
+                objectOffsetX = 21f;
+                break;
+            case 17:
+                objectOffsetY = 1.29f;
+                objectOffsetX = 24f;
+                break;
+            case 18:
+                objectOffsetY = 1.82f;
+                objectOffsetX = 21f;
+                break;
+            case 19:
+                objectOffsetY = 9.08f;
+                objectOffsetX = 31f;
+                break;
         }
 
         // returns the y-axis offset value to be used in a calculation
-        return objectOffsetY;
+        return (objectOffsetY, objectOffsetX);
     }
 
-    // spawns the obstacles
-    private void SpawnObjects()
+    // spawns object
+    private void ChooseObsacle()
     {
-        // generates a random float between 0 and 1 to determine which object to spawn
-        float spawnChanceValue = Random.value;
+        if (enableSpawning) 
+        {
+            // generates a random variable between 0 (inclusive) and 20 (exclusive)
+            // for each game object within the 'objectPrefabs' array
+            int randomIndex = UnityEngine.Random.Range(0, 19);
 
-        // check is spawning is currently enabled
+            // retrieves the values held in the function 'ObjectOffset'
+            (float offsetY, float offsetX) = ObjectOffset(randomIndex);
+
+            // transforms the position of the object when spawned to a new position
+            // uses the prefab y-axis adjustments contained in a function (ObjectOffsetY)
+            transform.position = transform.position + new Vector3(offsetX, offsetY, 0);
+
+            // spawm that object 
+            // spawned at spawner's position
+            // 'Quaternion' regards the objects rotation (in this case, default)
+            Instantiate(objectPrefabs[randomIndex], transform.position, Quaternion.identity);
+
+            // resets the position of the object before the next object is spawned
+            // stops the objects from increasingly gaining height
+            transform.position = transform.position + new Vector3(-offsetX, -offsetY, 0);
+        }
+    }
+
+    // checks if power up can be spawned
+    private void SpawnPUCheck()
+    {
+        if (spawnPUCountdown > 0)
+        {
+            // ensures a minimum timeframe of 1 second is between each obstacle spawning
+            spawnPUCountdown -= Time.deltaTime;
+        }
+        else
+        {
+
+            // spawns after the time remaining is 0 seconds
+            ChoosePUObject();
+
+            // reset the spawn countdown for the next obstacle spawning
+            // adds a random number in the range of [0,1] to the countdown timing
+            // makes predicting when the next obstacle will spawn harder
+            spawnPUCountdown = UnityEngine.Random.Range(15, 25);
+        }
+    }
+
+    // spawns power up
+    private void ChoosePUObject()
+    {
         if (enableSpawning)
         {
-            // loop through each object prefab and its corresponding spawn chance
-            for (int prefabIndex = 0; prefabIndex <= objectPrefabs.Length - 1; prefabIndex++)
-            {
-                // check if current object's spawn chance within the array is less than the spawn chance value
-                if (spawnChanceValue < spawnChance[prefabIndex])
-                {
-                    // transforms the position of the object when spawned to a new position
-                    // uses the prefab y-axis adjustments contained in a function (ObjectOffsetY)
-                    transform.position = transform.position + new Vector3(0, ObjectOffsetY(prefabIndex), 0);
+            // generates a random variable between 20 (inclusive) and 24 (exclusive)
+            // for each game object within the 'objectPrefabs' array
+            int randomIndex = UnityEngine.Random.Range(20, 24);
 
-                    // spawm that object 
-                    // spawned at spawner's position
-                    // 'Quaternion' regards the objects rotation (in this case, default)
-                    Instantiate(objectPrefabs[prefabIndex], transform.position, Quaternion.identity);
+            float offsetY = UnityEngine.Random.Range(0.5f, 3f);
 
-                    // resets the position of the object before the next object is spawned
-                    // stops the objects from increasingly gaining height
-                    transform.position = transform.position + new Vector3(0, -(ObjectOffsetY(prefabIndex)), 0);
+            // transforms the position of the object when spawned to a new position
+            // uses the prefab y-axis adjustments contained in a function (ObjectOffsetY)
+            transform.position = transform.position + new Vector3(0, offsetY, 0);
 
-                    break;
-                }
+            // spawm that object 
+            // spawned at spawner's position
+            // 'Quaternion' regards the objects rotation (in this case, default)
+            Instantiate(objectPrefabs[randomIndex], transform.position, Quaternion.identity);
 
-                // subtract the current spawn chance from the random value
-                // reduces the chance of the same obstacle repeating
-                spawnChanceValue -= spawnChance[prefabIndex];
-            }
+            // resets the position of the object before the next object is spawned
+            // stops the objects from increasingly gaining height
+            transform.position = transform.position + new Vector3(0, -offsetY, 0);
         }
     }
 }
+
+
+
+
 
 

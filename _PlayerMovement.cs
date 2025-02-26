@@ -43,7 +43,7 @@ public class _PlayerMovement : MonoBehaviour
 
         characterController.detectCollisions = false;
     }
-
+ 
     // FixedUpdate() is used as it called at a constant 50 times a second
     // makes physics smoother
     void FixedUpdate()
